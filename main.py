@@ -1,7 +1,6 @@
 import pygame
 
-
-entities = []
+from Player import Player
 
 
 def handle_events():
@@ -9,20 +8,6 @@ def handle_events():
         if event.type == pygame.QUIT:
             return False
     return True
-
-
-def handle_input_for_object(obj):
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_UP]:
-        obj['YSpeed'] = -10
-    if keys[pygame.K_DOWN]:
-        obj['YSpeed'] = 10
-    if keys[pygame.K_LEFT]:
-        obj['XSpeed'] = -10
-    if keys[pygame.K_RIGHT]:
-        obj['XSpeed'] = 10
-    if keys[pygame.K_SPACE]:
-        entities.append(create_bullet((50, 180)))
 
 
 def draw_polygon(surface, drawable):
@@ -53,28 +38,15 @@ def create_bullet(position):
     return dict(Type='Bullet', Shape=([position[0], position[1]], [position[0], position[1] + 5], [position[0] + 5, position[1] + 2.5]), XSpeed=20, YSpeed=0, Colour=(0, 0, 0))
 
 
-def move_entities():
-    for entity in entities:
-        for point in entity['Shape']:
-            point[0] += entity['XSpeed']
-            point[1] += entity['YSpeed']
-
-
-def handle_bullet_collisions():
-    for entity1 in entities:
-        for entity2 in entities:
-            if entity1['Type'] == 'Bullet' and entity2['Type'] == 'Mob':
-                if calculate_collision(entity1, entity2):
-                    entities.remove(entity2)
+# def handle_bullet_collisions():
+#     for entity1 in entities:
+#         for entity2 in entities:
+#             if entity1['Type'] == 'Bullet' and entity2['Type'] == 'Mob':
+#                 if calculate_collision(entity1, entity2):
+#                     entities.remove(entity2)
 
 
 def main():
-    player = dict(Type='Player', Shape=([0, 0], [0, 50], [50, 25]), XSpeed=0, YSpeed=0, Colour=(0, 255, 0))
-    bloc = dict(Type='Mob', Shape=([350, 180], [350, 220], [390, 220], [390, 180]), XSpeed=0, YSpeed=0, Colour=(255, 0, 0))
-    entities.append(player)
-    entities.append(bloc)
-    print(player['Shape'])
-    print(len(player['Shape']))
     pygame.init()
     pygame.display.set_caption('Shooter')
 
@@ -84,18 +56,15 @@ def main():
 
     clock = pygame.time.Clock()
 
+    player = Player(10, 10, 10, 10, 10, ((0, 0), (0, 30), (30, 15)), screen, 100, 100, 100)
+
     while running:
         clock.tick(60)
-        running = handle_events()
-        handle_input_for_object(player)
-        move_entities()
-        player['XSpeed'] = 0
-        player['YSpeed'] = 0
-        handle_bullet_collisions()
-        for entity in entities:
-            draw_polygon(screen, entity)
-        if calculate_collision(player, bloc):
-            running = False
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+        player.update()
+        player.draw()
         pygame.display.update()
         screen.fill((255, 255, 255))
 
