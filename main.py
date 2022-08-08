@@ -1,5 +1,9 @@
+import math
+import random
+
 import pygame
 
+from Entity import Entity
 from Player import Player
 
 
@@ -14,36 +18,28 @@ def draw_polygon(surface, drawable):
     pygame.draw.polygon(surface, drawable['Colour'], drawable['Shape'])
 
 
-def calculate_collision(obj1, obj2):
-    for point1 in range(len(obj1['Shape'])):
-        if point1 != len(obj1['Shape']) - 1:
-            line1 = (obj1['Shape'][point1], obj1['Shape'][point1 + 1])
-        else:
-            line1 = (obj1['Shape'][point1], obj1['Shape'][0])
-        for point2 in range(len(obj2['Shape'])):
-            if point2 != len(obj2['Shape']) - 1:
-                line2 = (obj2['Shape'][point2], obj2['Shape'][point2 + 1])
-            else:
-                line2 = (obj2['Shape'][point2], obj2['Shape'][0])
+def calculate_lines_for_entity(entity):
+    lines = []
+    for point in range(len(entity.shape)):
+        lines.append(((entity.shape[point][0] + entity.pos_x, entity.shape[point][1] + entity.pos_y),
+                      (entity.shape[point + 1 if point != len(entity.shape) - 1 else 0][0] + entity.pos_x,
+                       entity.shape[point + 1 if point != len(entity.shape) - 1 else 0][1] + entity.pos_y)))
+    return lines
 
+
+def calculate_collision(entity1: Entity, entity2: Entity):
+    for line1 in calculate_lines_for_entity(entity1):
+        for line2 in calculate_lines_for_entity(entity2):
             # From https://bryceboe.com/2006/10/23/line-segment-intersection-algorithm/
             def ccw(a, b, c):
                 return (c[1] - a[1]) * (b[0] - a[0]) > (b[1] - a[1]) * (c[0] - a[0])
 
-            if ccw(line1[0], line2[0], line2[1]) != ccw(line1[1], line2[0], line2[1]) and ccw(line1[0], line1[1], line2[0]) != ccw(line1[0], line1[1], line2[1]):
+            if ccw(line1[0], line2[0], line2[1]) != ccw(line1[1], line2[0], line2[1]) \
+                    and ccw(line1[0], line1[1], line2[0]) != ccw(line1[0], line1[1], line2[1]):
                 return True
-
-
-def create_bullet(position):
-    return dict(Type='Bullet', Shape=([position[0], position[1]], [position[0], position[1] + 5], [position[0] + 5, position[1] + 2.5]), XSpeed=20, YSpeed=0, Colour=(0, 0, 0))
-
-
-# def handle_bullet_collisions():
-#     for entity1 in entities:
-#         for entity2 in entities:
-#             if entity1['Type'] == 'Bullet' and entity2['Type'] == 'Mob':
-#                 if calculate_collision(entity1, entity2):
-#                     entities.remove(entity2)
+    if math.sqrt(
+            (entity2.pos_x - entity1.pos_x) ** 2 + (entity2.pos_y - entity1.pos_y) ** 2) < entity1.size + entity2.size:
+        return True
 
 
 def main():
@@ -56,15 +52,37 @@ def main():
 
     clock = pygame.time.Clock()
 
-    player = Player(10, 10, 10, 10, 10, ((0, 0), (0, 30), (30, 15)), screen, 100, 100, 100)
+    player = Player(10, 0, 0, 0, 0, ((0, 0), (0, 30), (30, 15)), screen, 100, 100, 100)
+    entities = [player]
 
     while running:
         clock.tick(60)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-        player.update()
-        player.draw()
+            if event.type == pygame.USEREVENT:
+                entities.append(Entity('Bullet', 1, 10, 0, player.pos_x, player.pos_y, ((0, 0), (0, 5), (5, 3)),
+                                       screen, 255, 0, 0, 1))
+
+        if random.random() > 0.95:
+            entities.append(Entity('Mob', 1, -2, 0, 740, random.randint(10, 350), ((0, 0), (0, 20), (20, 20), (20, 0)),
+                                   screen, 0, 0, 255, 1))
+
+        for entity1 in entities:
+            for entity2 in entities:
+                if (entity1.entity_type == 'Player' and entity2.entity_type == 'Mob'
+                    or entity1.entity_type == 'Bullet' and entity2.entity_type == 'Mob') \
+                        and calculate_collision(entity1, entity2):
+                    entity1.health -= entity2.contact_damage
+                    entity2.health -= entity1.contact_damage
+
+        for entity in entities:
+            if entity.health <= 0 or entity.entity_type == 'Bullet' and entity.pos_x > 750:
+                entities.remove(entity)
+                continue
+            entity.update()
+        for entity in entities:
+            entity.draw()
         pygame.display.update()
         screen.fill((255, 255, 255))
 
