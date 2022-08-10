@@ -1,5 +1,3 @@
-import time
-
 import pygame.key
 
 from Entity import Entity

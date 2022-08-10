@@ -43,10 +43,12 @@ def calculate_collision(entity1: Entity, entity2: Entity):
 
 
 def main():
+    screen_width = 1280
+    screen_height = 720
     pygame.init()
     pygame.display.set_caption('Shooter')
 
-    screen = pygame.display.set_mode((720, 360))
+    screen = pygame.display.set_mode((screen_width, screen_height))
 
     running = True
 
@@ -65,7 +67,7 @@ def main():
                                        screen, 255, 0, 0, 1))
 
         if random.random() > 0.95:
-            entities.append(Entity('Mob', 1, -2, 0, 740, random.randint(10, 350), ((0, 0), (0, 20), (20, 20), (20, 0)),
+            entities.append(Entity('Mob', 1, -2, 0, screen_width + 20, random.randint(10, screen_height - 10), ((0, 0), (0, 20), (20, 20), (20, 0)),
                                    screen, 0, 0, 255, 1))
 
         for entity1 in entities:
@@ -77,7 +79,8 @@ def main():
                     entity2.health -= entity1.contact_damage
 
         for entity in entities:
-            if entity.health <= 0 or entity.entity_type == 'Bullet' and entity.pos_x > 750:
+            if entity.health <= 0 or entity.entity_type == 'Bullet' and entity.pos_x > screen_width + 20 \
+                    or entity.entity_type == 'Mob' and entity.pos_x < -20:
                 entities.remove(entity)
                 continue
             entity.update()
