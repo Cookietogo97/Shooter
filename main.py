@@ -45,8 +45,11 @@ def calculate_collision(entity1: Entity, entity2: Entity):
 def main():
     screen_width = 1280
     screen_height = 720
+    score = 0
     pygame.init()
     pygame.display.set_caption('Shooter')
+
+    font = pygame.font.Font(None, 32)
 
     screen = pygame.display.set_mode((screen_width, screen_height))
 
@@ -77,15 +80,32 @@ def main():
                         and calculate_collision(entity1, entity2):
                     entity1.health -= entity2.contact_damage
                     entity2.health -= entity1.contact_damage
-
         for entity in entities:
-            if entity.health <= 0 or entity.entity_type == 'Bullet' and entity.pos_x > screen_width + 20 \
+            if entity.health <= 0 and entity.entity_type == 'Mob':
+                score += 1
+                entities.remove(entity)
+            elif entity.health <= 0:
+                entities.remove(entity)
+                continue
+            if entity.entity_type == 'Bullet' and entity.pos_x > screen_width + 20 \
                     or entity.entity_type == 'Mob' and entity.pos_x < -20:
                 entities.remove(entity)
                 continue
             entity.update()
         for entity in entities:
             entity.draw()
+        health_text = font.render(f'Health: {player.health}', False, (0, 0, 0))
+        score_text = font.render(f'Score: {score}', False, (0, 0, 0))
+        screen.blit(health_text, health_text.get_rect())
+        score_rect = score_text.get_rect()
+        score_rect.move_ip(screen_width - score_rect.right, 0)
+        screen.blit(score_text, score_rect)
+        if player.health <= 0:
+            game_over_text = font.render('Game Over', False, (204, 34, 0))
+            game_over_text_rect = game_over_text.get_rect()
+            game_over_text_rect.move_ip(screen_width / 2 - game_over_text_rect.right / 2,
+                                        screen_height / 2 - game_over_text_rect.bottom / 2)
+            screen.blit(game_over_text, game_over_text_rect)
         pygame.display.update()
         screen.fill((255, 255, 255))
 

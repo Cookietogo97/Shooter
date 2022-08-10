@@ -13,13 +13,13 @@ class Player(Entity):
 
     def update(self):
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_UP]:
+        if keys[pygame.K_UP] and self.pos_y > 0:
             self.speed_y = -10
-        if keys[pygame.K_DOWN]:
+        if keys[pygame.K_DOWN] and self.pos_y < self.surface.get_rect().bottom:
             self.speed_y = 10
-        if keys[pygame.K_LEFT]:
+        if keys[pygame.K_LEFT] and self.pos_x > 0:
             self.speed_x = -10
-        if keys[pygame.K_RIGHT]:
+        if keys[pygame.K_RIGHT] and self.pos_x < self.surface.get_rect().right:
             self.speed_x = 10
         if keys[pygame.K_SPACE]:
             if pygame.time.get_ticks() - self.timer > self.shot_delay:
